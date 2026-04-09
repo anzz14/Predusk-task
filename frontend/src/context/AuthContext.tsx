@@ -31,9 +31,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Decode JWT payload client-side (without verification - just to read claims)
             try {
               const decoded = jose.decodeJwt(data.token);
+              const storedEmail = sessionStorage.getItem('user_email') || '';
               const userData: User = {
                 id: decoded.sub || '',
-                email: (decoded.email as string) || '',
+                email: storedEmail,
                 is_active: true,
                 created_at: new Date().toISOString(),
               };
@@ -62,6 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for logout events from API interceptor
     const handleLogout = () => {
+      sessionStorage.removeItem('user_email');
       setUser(null);
       setAuthToken(null);
     };
@@ -105,11 +107,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const decoded = jose.decodeJwt(token);
       const userData: User = {
         id: decoded.sub || '',
-        email: (decoded.email as string) || '',
+        email,
         is_active: true,
         created_at: new Date().toISOString(),
       };
 
+      sessionStorage.setItem('user_email', email);
       setUser(userData);
       setAuthToken(token);
       router.push('/dashboard');
@@ -155,12 +158,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         credentials: 'include',
       });
 
+      sessionStorage.removeItem('user_email');
       setUser(null);
       setAuthToken(null);
       router.push('/login');
     } catch (error) {
       console.error('Logout failed:', error);
       // Still clear local state even if cookie clear fails
+      sessionStorage.removeItem('user_email');
       setUser(null);
       setAuthToken(null);
       router.push('/login');

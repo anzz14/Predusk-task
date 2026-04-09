@@ -53,7 +53,7 @@ export interface DocumentResponse {
   mime_type: string;
   upload_timestamp: string;
   created_at: string;
-  processing_jobs: ProcessingJob[];
+  job: ProcessingJob | null;
   extracted_result: ExtractedResult | null;
 }
 

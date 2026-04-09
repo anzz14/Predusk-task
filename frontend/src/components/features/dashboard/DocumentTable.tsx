@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useDocumentStore } from '@/store/documentStore';
 import { api } from '@/lib/api';
+import type { DocumentResponse } from '@/types/document';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from './StatusBadge';
@@ -11,7 +12,7 @@ import { JobProgressBar } from './JobProgressBar';
 import { formatDate, formatBytes } from '@/lib/utils';
 
 interface DocumentTableProps {
-  documents: any[];
+  documents: DocumentResponse[];
   isLoading: boolean;
   onRefetch: () => void;
 }
@@ -86,8 +87,8 @@ export function DocumentTable({ documents, isLoading, onRefetch }: DocumentTable
             </TableRow>
           </TableHeader>
           <TableBody>
-            {documents.map((doc: any) => {
-              const job = doc.processing_jobs?.[0];
+            {documents.map((doc) => {
+              const job = doc.job;
               return (
                 <TableRow key={doc.id} className="border-b border-gray-100 hover:bg-gray-50">
                   <TableCell className="px-6 py-4 text-sm text-gray-900">
@@ -126,7 +127,7 @@ export function DocumentTable({ documents, isLoading, onRefetch }: DocumentTable
                       )}
 
                       {/* Export Button */}
-                      {job?.status === 'finalized' && job.extracted_result && (
+                      {job?.status === 'finalized' && doc.extracted_result && (
                         <Button
                           size="sm"
                           onClick={() => handleExport(doc.id)}

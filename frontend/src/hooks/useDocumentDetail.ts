@@ -70,7 +70,7 @@ export function useDocumentDetail(documentId: string | null): UseDocumentDetailR
   }, []);
 
   // Extract latest job and result from document
-  const job = document?.processing_jobs?.[0] || null;
+  const job = document?.job || null;
   const result = document?.extracted_result || null;
 
   return {

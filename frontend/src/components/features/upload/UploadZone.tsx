@@ -17,12 +17,10 @@ export function UploadZone() {
   const [error, setError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadedJobIds, setUploadedJobIds] = useState<string[]>([]);
+  const [latestJobId, setLatestJobId] = useState<string | null>(null);
 
-  // Start SSE for each uploaded job
-  uploadedJobIds.forEach((jobId) => {
-    useSSE(jobId);
-  });
+  // Track progress updates for the most recently queued job.
+  useSSE(latestJobId);
 
   const validateFiles = (files: File[]): { valid: File[]; errors: string[] } => {
     const errors: string[] = [];
@@ -74,7 +72,7 @@ export function UploadZone() {
 
       // Extract job IDs from response and trigger SSE connections
       const jobIds = response.data.map((item) => item.job_id);
-      setUploadedJobIds(jobIds);
+      setLatestJobId(jobIds[jobIds.length - 1] ?? null);
 
       // Reset form
       setUploadProgress(0);
