@@ -1,0 +1,82 @@
+version: '3.9'
+
+services:
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./storage/uploads:/app/storage/uploads
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://neondb_owner:npg_XbZkAp5BQ2IV@ep-misty-bread-a15ws2u8-pooler.ap-southeast-1.aws.neon.tech/neondb?ssl=require
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET_KEY=your-secret-key-change-in-production
+      - JWT_ALGORITHM=HS256
+      - JWT_EXPIRY_HOURS=24
+      - UPLOAD_DIR=./storage/uploads
+      - MAX_UPLOAD_SIZE_BYTES=5242880
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - FRONTEND_ORIGIN=http://localhost:3000
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: celery -A app.workers.celery_app worker --loglevel=info
+    volumes:
+      - ./storage/uploads:/app/storage/uploads
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://neondb_owner:npg_XbZkAp5BQ2IV@ep-misty-bread-a15ws2u8-pooler.ap-southeast-1.aws.neon.tech/neondb?ssl=require
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET_KEY=your-secret-key-change-in-production
+      - JWT_ALGORITHM=HS256
+      - JWT_EXPIRY_HOURS=24
+      - UPLOAD_DIR=./storage/uploads
+      - MAX_UPLOAD_SIZE_BYTES=5242880
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - FRONTEND_ORIGIN=http://localhost:3000
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: seo_analyzer
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:

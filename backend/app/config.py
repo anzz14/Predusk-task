@@ -1,0 +1,26 @@
+from functools import lru_cache
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+	model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+	DATABASE_URL: str
+	REDIS_URL: str
+	JWT_SECRET_KEY: str
+	JWT_ALGORITHM: str = "HS256"
+	JWT_EXPIRY_HOURS: int = 24
+	FRONTEND_ORIGIN: str = "http://localhost:3000"
+	UPLOAD_DIR: str = "./storage/uploads"
+	MAX_UPLOAD_SIZE_BYTES: int = 5242880
+	CELERY_BROKER_URL: str
+	CELERY_RESULT_BACKEND: str
+
+
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+	return Settings()
+
+
+settings = get_settings()
